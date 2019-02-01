@@ -30,7 +30,7 @@ angular.module('plane.tablo').controller('AlertDemoCtrl', function ($scope, $htt
 
   $scope.loadDirection = function(direction, search=false) {
     $scope.direction = direction;
-    let url = 'http://labelimg.ru/timetable.php?direction='+ direction + ((search)?'&search='+search:'')+'&dateStart='+$scope.parseTimeToString($scope.start)+'&dateEnd='+$scope.parseTimeToString($scope.end)+'&perPage=9999&page=0&locale=ru'
+    let url = 'https://labelimg.ru/timetable.php?direction='+ direction + ((search)?'&search='+search:'')+'&dateStart='+$scope.parseTimeToString($scope.start)+'&dateEnd='+$scope.parseTimeToString($scope.end)+'&perPage=9999&page=0&locale=ru'
     $scope.loadingHttp = true;
     $http.get(url).then(function successCallback(response) {
       for(let i = 0; i< response.data.items.length;i++){
@@ -62,7 +62,7 @@ angular.module('plane.tablo').controller('AlertDemoCtrl', function ($scope, $htt
   };
 
   $scope.searchLocation = function(val) {
-    return $http.get('http://labelimg.ru/search.php?q=' + val + '&locale=ru').then(function(response){
+    return $http.get('https://labelimg.ru/search.php?q=' + val + '&locale=ru').then(function(response){
       return response.data.slice(0, 15).map(function(item){
         return item
       });
