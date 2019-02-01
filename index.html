@@ -1,0 +1,65 @@
+<!doctype html>
+<html ng-app="plane.tablo">
+  <head>
+  	<link href="css/bootstrap.min.css" rel="stylesheet">
+  	<link href="css/ng-table.min.css" rel="stylesheet">
+  	<link href="css/style.css" rel="stylesheet">
+    <script src="js/angular.min.js"></script>
+    <script src="js/angular-sanitize.js"></script>
+    <script src="js/ui-bootstrap-tpls-2.5.0.min.js"></script>
+    <script src="js/ng-table.min.js"></script>
+    <script src="js/script.js"></script>
+  </head>
+  <body>
+
+<div ng-controller="AlertDemoCtrl">
+	<div class="preloader" ng-show="loadingHttp"> 
+        <img src="images/flight.gif"/>
+    </div>
+  <center>
+  	<button type="button" class='btn' ng-class="direction == 'departure'? 'btn-info':'btn-default'" ng-click="loadDirection('departure')">Вылет</button>
+    <button type="button" class='btn' ng-class="direction == 'arrival'? 'btn-info':'btn-default'" ng-click="loadDirection('arrival')">Прилёт</button>
+  </center>
+  <br>
+  <div>
+    <input type="text" ng-model="asyncSelected" placeholder="Поиск по рейсу, названию" uib-typeahead="search for search in searchLocation($viewValue)" typeahead-no-results="noResults" class="form-control"><button type="button" class='btn search' ng-click="search(asyncSelected | json)">Найти</button>
+    <div ng-show="noResults">
+      <i class="glyphicon glyphicon-remove"></i> No Results Found
+    </div>
+   </div>
+   <div style="float: right;">
+       <select class="form-control" ng-model="dayStep" ng-change="changed()" ng-options="opt for opt in options.dayStep"></select>
+       <select class="form-control" ng-model="timeStep" ng-change="changed()" ng-options="opt for opt in options.timeStep"></select>
+       <select class="form-control" ng-model="statusStep" ng-change="changed()" ng-options="opt for opt in options.statusStep"></select>
+   </div>
+
+  <table ng-table="tableParams" class="table">
+    <tr ng-repeat="data in $data">
+    	<td title="''" class="otpr" ng-if='direction == "departure"'>
+            {{parseTime(data.t_otpr) > parseTime(data.t_st)? getTime(parseTime(data.t_otpr)):''}}</td>
+    	<td title="'Отправление'" ng-style="{'text-decoration': parseTime(data.t_otpr) > parseTime(data.t_st)? 'line-through':'none'}" ng-if='direction == "departure"'>
+            {{getTime(parseTime(data.t_st))}}</td>
+        <td title="'Прибытие'" ng-if='direction == "arrival"'>
+            {{getTime(parseTime(data.t_st))}}</td>
+        <td title="'Рейс'">
+            <img class='flightImage' src="https://www.svo.aero/bitrix/upload/apiresize/{{data.co.livreiImageId.id}}/100/100/crop/img.png">
+            {{data.co.code}} {{data.flt}}
+            <div ng-repeat="Flight in data.Flight">
+              <img class='flightImage' src="https://www.svo.aero/bitrix/upload/apiresize/{{Flight.id}}/100/100/crop/img.png">
+              {{Flight.code}} {{Flight.flt}}
+            </div>
+        </td>
+        <td title="'Место назначения'" ng-if='direction == "departure"'>
+            {{data.mar2.city}}</td>
+        <td title="'Место вылета'" ng-if='direction == "arrival"'>
+            {{data.mar1.city}}</td>
+        <td title="'Терминал'">
+            {{data.term}}</td>
+        <td title="'Примечание'">
+        	 {{data.vip_status_rus}}
+           <!--  {{repl(data.vip_status_rus, direction == "departure"? data.t_at_mar: data.t_at)}} --></td>
+    </tr>
+</table>
+</div>
+  </body>
+</html>

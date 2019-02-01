@@ -1,0 +1,46 @@
+body {
+	margin: 0;
+	padding: 0;
+}
+
+.flightImage {
+	width: 20px;
+	height: 16px;
+}
+
+.otpr {
+	color: red;
+}
+
+td {
+	font-weight: 700;
+}
+
+.table {
+	cursor: default;
+}
+
+.form-control {
+	width: 200px;
+	float: left;
+}
+
+.search {
+	float: left;
+}
+
+.preloader {
+	position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #d5d5dead;
+    z-index: 10000;
+}
+
+.preloader > img {
+	position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -150px;
+    margin-top: -150px;
+}
