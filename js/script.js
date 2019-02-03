@@ -6,35 +6,53 @@ angular.module('plane.tablo').controller('AlertDemoCtrl', function($scope, $http
   $scope.end = new Date();
   $scope.end.setHours(24, 0, 0)
 
+  // Разбираем строковое представление которое нам возвращает сервер аэропорта
   $scope.parseTime = function(data) {
     return Date.parse(data);
   }
-
-  $scope.add = function(p) {
+  
+ // Добавляем ноль если часы,минуты  10
+  $scope.addZero = function(p) {
     return ("0" + p).slice(-2)
   }
 
+  // Подготавливаем строку со временем, для отправки на сервер т.к toISOString() сервер не обрабатывает
   $scope.parseTimeToString = function(data) {
-    return data.getFullYear() + '-' + $scope.add(data.getMonth() + 1) + "-" + $scope.add(data.getDate()) + "T" + $scope.add(data.getHours()) + ":00:00%2B03:00"
+    return data.getFullYear() + '-' + $scope.addZero(data.getMonth() + 1) + "-" + $scope.addZero(data.getDate()) + "T" + $scope.addZero(data.getHours()) + ":00:00%2B03:00"
   }
 
+  // Возвращем время формата час:минута
   $scope.getTime = function(parse) {
     parse = new Date(parse)
     parse.setHours(parse.getUTCHours() + 3)
-    return $scope.add(parse.getHours()) + ":" + $scope.add(parse.getMinutes());
+    return $scope.addZero(parse.getHours()) + ":" + $scope.addZero(parse.getMinutes());
   }
-
+  
+  // Основная каша, которая получает результат с сервера аэропорта,через прокси сервер и обрабатывает его.
   $scope.loadDirection = function(direction, search = false) {
     $scope.direction = direction;
     let url = 'https://labelimg.ru/timetable.php?direction=' + direction + ((search) ? '&search=' + search : '') + '&dateStart=' + $scope.parseTimeToString($scope.start) + '&dateEnd=' + $scope.parseTimeToString($scope.end) + '&perPage=9999&page=0&locale=ru'
     $scope.loadingHttp = true;
     $http.get(url).then(function successCallback(response) {
-      for (let i = 0; i < response.data.items.length; i++) {
-        if (response.data.items[i].main_flight != '') {
-          for (let x = 0; x < response.data.items.length; x++) {
-            if (response.data.items[i].main_flight == response.data.items[x].i_id) {
+    //***************************
+    // Код ниже выполняет фильтрацию и объеденение попутных рейсов в одну сторону.
+    // К примеру вместо:
+    // -----------------
+    // | N4 3533 Самара|
+    // | N9 2345 Самара|
+    // -----------------
+    // Выводит красивое
+    // -----------------
+    // | N4 3533 Самара|
+    // | N9 2345       |
+    // -----------------
+    //***************************
+      for (let i = 0; i < response.data.items.length; i++) { // Перебираем рейсы
+        if (response.data.items[i].main_flight != '') { // Если у этого рейса main_flight не пустой, значит он является попутным
+          for (let x = 0; x < response.data.items.length; x++) { // Снова перебираем рейсы
+            if (response.data.items[i].main_flight == response.data.items[x].i_id) { // И ищем совпадения
               var s = response.data.items[i];
-              if (response.data.items[x]['Flight'] == undefined) {
+              if (response.data.items[x]['Flight'] == undefined) { // Если нашли совпадение, то добавляем объект,в который будем записывать рейсы
                 response.data.items[x]['Flight'] = []
               }
               response.data.items[x]['Flight'].push({
@@ -47,11 +65,11 @@ angular.module('plane.tablo').controller('AlertDemoCtrl', function($scope, $http
         }
       }
 
-      let addFlightNull = response.data.items.filter(function(n) {
+      let addFlightNull = response.data.items.filter(function(n) { // Фильтруем только основные рейсы,а не попутные
         return n.main_flight == '';
       });
 
-      if ($scope.statusStep != 'Все') {
+      if ($scope.statusStep != 'Все') { // Т.к в задании был пункт просмотра задержаных рейсов,а api этого не позволяет, то будем каждый перебирать и читать его статус
         addFlightNull = addFlightNull.filter(function(n) {
           return n.vip_status_rus.match($scope.statusStep);
         });
@@ -64,24 +82,23 @@ angular.module('plane.tablo').controller('AlertDemoCtrl', function($scope, $http
         dataset: addFlightNull
       });
       $scope.loadingHttp = false;
-    }, function errorCallback(response) {});
+    });
 
   };
-
+  // Функция автодополнения, по рейсу, городу, тоже воруем с сервера аэропорта
   $scope.searchLocation = function(val) {
     return $http.get('https://labelimg.ru/search.php?q=' + val + '&locale=ru').then(function(response) {
-      return response.data.slice(0, 15).map(function(item) {
+      return response.data.slice(0, 15).map(function(item) { // Выводим 15 результатов
         return item
       });
     });
   };
-
+  
   $scope.search = function(s) {
     $scope.loadDirection($scope.direction, s.replace(/\"/gm, ''))
   }
 
-  $scope.loadDirection('departure')
-
+  // Работа со временем,днем, статусом
   $scope.timeStep = 'Любое время';
   $scope.dayStep = 'Сегодня';
   $scope.statusStep = 'Все';
@@ -139,5 +156,5 @@ angular.module('plane.tablo').controller('AlertDemoCtrl', function($scope, $http
     }
     $scope.loadDirection('departure')
   }
-
+    $scope.loadDirection('departure')
 });
